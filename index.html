@@ -1,0 +1,425 @@
+<!--
+ ============================================================
+  Project   : ESP32-S3 Object Color Detection System
+  Author    : Raunak Choudhary
+  Company   : Botics
+  Version   : 1.0.0
+  Date      : March 2026
+ ------------------------------------------------------------
+  License   : MIT License
+  Copyright (c) 2026 Raunak Choudhary / Botics
+ ------------------------------------------------------------
+  GitHub    : github.com/Botics
+ ============================================================
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Detection — Botics</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+    :root {
+      --bg: #080c10;
+      --panel: #0d1117;
+      --border: #1c2333;
+      --accent: #58a6ff;
+      --text: #c9d1d9;
+      --muted: #484f58;
+      --red:    #ff4444;
+      --green:  #22c55e;
+      --blue:   #3b82f6;
+      --yellow: #eab308;
+      --black:  #6b7280;
+      --white:  #e5e7eb;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Scanline effect */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Grid bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    /* ---- HEADER ---- */
+    .header {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(88,166,255,0.4);
+    }
+
+    .logo span { color: #fff; }
+
+    .tagline {
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ---- CAMERA FEED ---- */
+    .stream-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .stream-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .card-label {
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    #videoFeed {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+      border: 1px solid var(--border);
+      background: #000;
+      min-height: 200px;
+    }
+
+    /* ---- DETECTED COLORS PANEL ---- */
+    .colors-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 16px;
+    }
+
+    .colors-title {
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .color-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: 50px;
+      align-items: center;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      animation: popIn 0.3s ease;
+      transition: all 0.3s;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .chip-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    .chip.RED    { color: var(--red);    border-color: var(--red);    background: rgba(255,68,68,0.1); }
+    .chip.GREEN  { color: var(--green);  border-color: var(--green);  background: rgba(34,197,94,0.1); }
+    .chip.BLUE   { color: var(--blue);   border-color: var(--blue);   background: rgba(59,130,246,0.1); }
+    .chip.YELLOW { color: var(--yellow); border-color: var(--yellow); background: rgba(234,179,8,0.1); }
+    .chip.BLACK  { color: var(--black);  border-color: var(--black);  background: rgba(107,114,128,0.1); }
+    .chip.WHITE  { color: var(--white);  border-color: var(--white);  background: rgba(229,231,235,0.1); }
+
+    .no-detect {
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+    }
+
+    /* ---- COLOR REFERENCE ---- */
+    .ref-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 16px;
+    }
+
+    .ref-title {
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .ref-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.3s;
+    }
+
+    .ref-item.active {
+      border-color: currentColor;
+      background: rgba(255,255,255,0.05);
+      transform: scale(1.03);
+    }
+
+    .ref-swatch {
+      width: 20px; height: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .ref-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* ---- STATUS BAR ---- */
+    .status-bar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 2s infinite;
+    }
+
+    .fps { margin-left: auto; color: var(--accent); }
+    .author { margin-left: 8px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">COLOR<span>DETECT</span></div>
+    <div class="tagline">ESP32-S3 · OPENCV · REAL-TIME DETECTION</div>
+  </div>
+
+  <!-- Camera Stream -->
+  <div class="stream-card">
+    <div class="card-label">
+      <div class="live-dot"></div>
+      LIVE CAMERA FEED — COLOR DETECTION ACTIVE
+    </div>
+    <img id="videoFeed" src="/video_feed" alt="Live Feed">
+  </div>
+
+  <!-- Detected Colors -->
+  <div class="colors-card">
+    <div class="colors-title">DETECTED COLORS</div>
+    <div class="color-chips" id="colorChips">
+      <span class="no-detect">Waiting for detection...</span>
+    </div>
+  </div>
+
+  <!-- Color Reference -->
+  <div class="ref-card">
+    <div class="ref-title">COLOR REFERENCE</div>
+    <div class="ref-grid">
+      <div class="ref-item" id="ref-RED"    style="color:#ff4444">
+        <div class="ref-swatch" style="background:#ff4444"></div>
+        <span class="ref-name">RED</span>
+      </div>
+      <div class="ref-item" id="ref-GREEN"  style="color:#22c55e">
+        <div class="ref-swatch" style="background:#22c55e"></div>
+        <span class="ref-name">GREEN</span>
+      </div>
+      <div class="ref-item" id="ref-BLUE"   style="color:#3b82f6">
+        <div class="ref-swatch" style="background:#3b82f6"></div>
+        <span class="ref-name">BLUE</span>
+      </div>
+      <div class="ref-item" id="ref-YELLOW" style="color:#eab308">
+        <div class="ref-swatch" style="background:#eab308"></div>
+        <span class="ref-name">YELLOW</span>
+      </div>
+      <div class="ref-item" id="ref-BLACK"  style="color:#9ca3af">
+        <div class="ref-swatch" style="background:#374151;border:1px solid #6b7280"></div>
+        <span class="ref-name">BLACK</span>
+      </div>
+      <div class="ref-item" id="ref-WHITE"  style="color:#e5e7eb">
+        <div class="ref-swatch" style="background:#e5e7eb"></div>
+        <span class="ref-name">WHITE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>CONNECTED · ESP32-S3</span>
+    <span id="countText">0 colors</span>
+    <span class="fps" id="fpsText">-- FPS</span>
+    <span class="author">© Botics</span>
+  </div>
+
+<script>
+  const DOT_COLORS = {
+    RED:'#ff4444', GREEN:'#22c55e', BLUE:'#3b82f6',
+    YELLOW:'#eab308', BLACK:'#6b7280', WHITE:'#e5e7eb'
+  };
+
+  let lastTime = Date.now(), frameCount = 0;
+
+  function updateUI(detected) {
+    const chips = document.getElementById('colorChips');
+    const allRefs = ['RED','GREEN','BLUE','YELLOW','BLACK','WHITE'];
+
+    // Clear active states
+    allRefs.forEach(c => {
+      document.getElementById('ref-' + c).classList.remove('active');
+    });
+
+    if (detected.length === 0) {
+      chips.innerHTML = '<span class="no-detect">No color detected — show object to camera</span>';
+      document.getElementById('countText').textContent = '0 colors';
+      return;
+    }
+
+    // Update chips
+    chips.innerHTML = detected.map(d => `
+      <div class="chip ${d.color}">
+        <div class="chip-dot" style="background:${DOT_COLORS[d.color]}"></div>
+        ${d.color}
+      </div>
+    `).join('');
+
+    // Highlight reference
+    detected.forEach(d => {
+      const ref = document.getElementById('ref-' + d.color);
+      if (ref) ref.classList.add('active');
+    });
+
+    document.getElementById('countText').textContent = detected.length + ' color' + (detected.length > 1 ? 's' : '') + ' detected';
+
+    // FPS
+    frameCount++;
+    const now = Date.now();
+    if (now - lastTime >= 1000) {
+      document.getElementById('fpsText').textContent = frameCount + ' FPS';
+      frameCount = 0;
+      lastTime = now;
+    }
+  }
+
+  async function fetchColors() {
+    try {
+      const r = await fetch('/colors');
+      const d = await r.json();
+      updateUI(d.detected);
+    } catch(e) {}
+    setTimeout(fetchColors, 300);
+  }
+
+  fetchColors();
+</script>
+</body>
+</html>
