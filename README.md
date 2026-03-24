@@ -220,7 +220,39 @@ ESP32-Color-Detection-Dashboard/
 - [ ] WebSocket streaming for multi-client support
 - [ ] CSV / database logging of detected colors and timestamps
 
----
+---GitHub README mein screenshots ke liye yeh section paste karo — ## 🚀 Future Roadmap se pehle:
+markdown---
+
+## 📸 Screenshots & Live Detection
+
+### 🎥 Live Detection Feed
+
+![Live Detection Feed Image 2026-03-24 at 3 23 23 PM](https://github.com/user-attachments/assets/6e5a96e5-b198-43d7-b652-af141995c9d3)
+
+### 🔴 Red Object Detection
+
+<img width="1912" height="966" alt="RED-2026-03-24 122533" src="https://github.com/user-attachments/assets/d32c6ef5-62bb-4da0-8355-04103483496b" />
+
+### 🟢 Green Object Detection
+
+<img width="1917" height="965" alt="GREEN-2026-03-24 122620" src="https://github.com/user-attachments/assets/1a7cf99a-9743-4375-8b4a-8a0bdff914b2" />
+
+### 🔵 Blue Object Detection
+
+<img width="1913" height="963" alt="BLUE-2026-03-24 122417" src="https://github.com/user-attachments/assets/61b2f0e3-e325-484d-baf4-b8ba35f010cc" />
+
+### 🟡 Yellow  Object Detection
+
+<img width="1916" height="968" alt="YELLOW 2026-03-24 122321" src="https://github.com/user-attachments/assets/12a0f4d3-d722-44aa-bfe6-7df87b31c4de" />
+
+### ⚫ Black Object Detection
+
+<img width="1918" height="958" alt="BLACK 2026-03-24 123209" src="https://github.com/user-attachments/assets/f73ceac2-faa5-4cd8-bfbc-6f0f19862b01" />
+
+
+### 🌐 Web Dashboard
+<img width="1917" height="962" alt="WEBINTERFACE1-2026-03-24 123319" src="https://github.com/user-attachments/assets/8bdb43b2-4f3a-4c20-8749-cab656c2939f" />
+<img width="1917" height="957" alt="WEBINTERFACE2-2026-03-24 123357" src="https://github.com/user-attachments/assets/e60a4702-87f4-4cd2-9305-a3ae58e38e73" />
 
 ## Author
 
@@ -230,6 +262,4 @@ ESP32-Color-Detection-Dashboard/
 *Robotics · Artificial Intelligence · Computer Vision*
 
 
-4. Neeche **"Commit changes"** click karo
 
-**Sirf ek kaam baaki hai** — `YOUR_USERNAME` ki jagah apna actual GitHub username daal do, 2 jagah aata hai!
